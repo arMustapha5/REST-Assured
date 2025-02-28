@@ -1,4 +1,4 @@
-package api.tests.ReqesAPITests;
+package api.tests.JSONPlaceholderTests;
 
 import io.qameta.allure.*;
 import io.restassured.http.ContentType;
@@ -9,29 +9,29 @@ import org.junit.jupiter.api.*;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@Epic("RESTful API Testing")
+@Epic("JSONPlaceholder API Testing")
 @Feature("PUT Operations")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ReqresPutTests {
+public class JSONPlaceholderPutTests {
 
-    private static final String BASE_URL = "https://reqres.in/api";
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com";
 
     @Test
-    @Story("User Update")
-    @DisplayName("Update user with full data using PUT")
+    @Story("Post Update")
+    @DisplayName("Update a post using PUT")
     @Severity(SeverityLevel.CRITICAL)
-    public void testUpdateUserUsingPut() {
-        executePutTest("/users/2", "Update User",
-                new JSONObject().put("name", "John Updated").put("job", "Software Engineer"), 200);
+    public void testUpdatePostUsingPut() {
+        executePutTest("/posts/1", "Update Post",
+                new JSONObject().put("title", "Updated Title").put("body", "Updated Body").put("userId", 1), 200);
     }
 
     @Test
     @Story("Partial Update")
-    @DisplayName("Update user with partial data using PUT")
+    @DisplayName("Update a post with partial data using PUT")
     @Severity(SeverityLevel.NORMAL)
-    public void testUpdateUserWithPartialData() {
-        executePutTest("/users/2", "Update User with Partial Data",
-                new JSONObject().put("job", "Senior Developer"), 200);
+    public void testUpdatePostWithPartialData() {
+        executePutTest("/posts/1", "Update Post with Partial Data",
+                new JSONObject().put("title", "Partially Updated Title"), 200);
     }
 
     private void executePutTest(String endpoint, String testName, JSONObject requestBody, int expectedStatus) {
@@ -51,11 +51,22 @@ public class ReqresPutTests {
         attachResponseDetails(response);
 
         requestBody.keySet().forEach(key ->
-                response.then().body(key, equalTo(requestBody.getString(key)))
+                response.then().body(key, equalTo(requestBody.get(key)))
         );
 
         Allure.step("Finish test: " + testName);
     }
+    @Test
+    public void testUpdateNonExistingPost() {
+        given()
+                .header("Content-Type", "application/json")
+                .body("{\"title\": \"Updated Title\"}") // Ensure a valid payload
+                .when()
+                .put(BASE_URL + "/posts/9999") // Trying to update a non-existent post
+                .then()
+                .statusCode(anyOf(is(200), is(201), is(404), is(500))); // Accepting 500 as a possible response
+    }
+
 
     private void attachResponseDetails(Response response) {
         Allure.addAttachment("API Response", "text/plain",

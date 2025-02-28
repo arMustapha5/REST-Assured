@@ -1,41 +1,40 @@
-package api.tests.ReqesAPITests;
+package api.tests.JSONPlaceholderTests;
 
 import io.qameta.allure.*;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@Epic("RESTful API Testing")
+@Epic("JSONPlaceholder API Testing")
 @Feature("GET Operations")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ReqresGetTests {
+public class JSONPlaceholderGetTests {
 
-    private static final String BASE_URL = "https://reqres.in/api";
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com";
 
     @Test
-    @Story("User Listing")
-    @DisplayName("Get list of users")
+    @Story("Post Listing")
+    @DisplayName("Get all posts")
     @Severity(SeverityLevel.CRITICAL)
-    public void testGetUsers() {
-        executeGetTest("/users?page=2", "Get User List");
+    public void testGetPosts() {
+        executeGetTest("/posts", "Get All Posts");
     }
 
     @Test
-    @Story("User Details")
-    @DisplayName("Get single user details")
+    @Story("Post Details")
+    @DisplayName("Get a single post")
     @Severity(SeverityLevel.NORMAL)
-    public void testSingleUser() {
-        executeGetTest("/users/2", "Get Single User");
+    public void testGetSinglePost() {
+        executeGetTest("/posts/1", "Get Single Post");
     }
 
     @Test
     @Story("Error Handling")
-    @DisplayName("Get non-existing user")
+    @DisplayName("Get a non-existing post")
     @Severity(SeverityLevel.MINOR)
-    public void testUserNotFound() {
-        executeGetTest("/users/999", "Get Non-Existing User", 404);
+    public void testPostNotFound() {
+        executeGetTest("/posts/9999", "Get Non-Existing Post", 404);
     }
 
     private void executeGetTest(String endpoint, String testName) {

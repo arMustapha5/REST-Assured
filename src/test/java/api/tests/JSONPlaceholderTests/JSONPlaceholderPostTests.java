@@ -1,4 +1,4 @@
-package api.tests.ReqesAPITests;
+package api.tests.JSONPlaceholderTests;
 
 import io.qameta.allure.*;
 import io.restassured.http.ContentType;
@@ -9,29 +9,29 @@ import org.junit.jupiter.api.*;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
-@Epic("RESTful API Testing")
+@Epic("JSONPlaceholder API Testing")
 @Feature("POST Operations")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ReqresPostTests {
+public class JSONPlaceholderPostTests {
 
-    private static final String BASE_URL = "https://reqres.in/api";
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com";
 
     @Test
-    @Story("User Creation")
-    @DisplayName("Create a new user")
+    @Story("Post Creation")
+    @DisplayName("Create a new post")
     @Severity(SeverityLevel.CRITICAL)
-    public void testCreateUser() {
-        executePostTest("/users", "Create User",
-                new JSONObject().put("name", "Abdul Rehman").put("job", "QA Engineer"), 201);
+    public void testCreatePost() {
+        executePostTest("/posts", "Create Post",
+                new JSONObject().put("title", "Test Post").put("body", "This is a test post.").put("userId", 1), 201);
     }
 
     @Test
     @Story("Error Handling")
-    @DisplayName("Create user with invalid data")
+    @DisplayName("Create a post with missing fields")
     @Severity(SeverityLevel.NORMAL)
-    public void testCreateUserWithInvalidData() {
-        executePostTest("/users", "Create User with Invalid Data",
-                new JSONObject().put("name", ""), 201);
+    public void testCreatePostWithMissingFields() {
+        executePostTest("/posts", "Create Post with Missing Fields",
+                new JSONObject().put("title", ""), 201);
     }
 
     private void executePostTest(String endpoint, String testName, JSONObject requestBody, int expectedStatus) {
@@ -50,12 +50,9 @@ public class ReqresPostTests {
         Allure.addAttachment("API Request", "text/plain", "POST " + endpoint);
         attachResponseDetails(response);
 
-        if (requestBody.has("name")) {
-            response.then().body("name", equalTo(requestBody.getString("name")));
-        }
-        if (requestBody.has("job")) {
-            response.then().body("job", equalTo(requestBody.getString("job")));
-        }
+        requestBody.keySet().forEach(key ->
+                response.then().body(key, equalTo(requestBody.get(key)))
+        );
 
         Allure.step("Finish test: " + testName);
     }

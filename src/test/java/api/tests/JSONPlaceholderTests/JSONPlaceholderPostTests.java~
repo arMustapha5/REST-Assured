@@ -1,0 +1,87 @@
+package api.tests.JSONPlaceholderTests;
+
+import io.qameta.allure.*;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import org.json.JSONObject;
+import org.junit.jupiter.api.*;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.*;
+
+@Epic("JSONPlaceholder API Testing")
+@Feature("POST Operations")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class JSONPlaceholderPostTests {
+
+    private static final String BASE_URL = "https://jsonplaceholder.typicode.com";
+
+    @BeforeAll
+    public void setup() {
+        RestAssured.baseURI = BASE_URL;
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+    }
+
+    @Test
+    @Story("Post Creation")
+    @DisplayName("Create a new post")
+    @Severity(SeverityLevel.CRITICAL)
+    public void testCreatePost() {
+        executePostTest("/posts", "Create Post", createPostRequestBody("Test Post", "This is a test post.", 1));
+    }
+
+    @Test
+    @Story("Error Handling")
+    @DisplayName("Create a post with missing fields")
+    @Severity(SeverityLevel.NORMAL)
+    public void testCreatePostWithMissingFields() {
+        executePostTest("/posts", "Create Post with Missing Fields", new JSONObject().put("title", ""));
+    }
+
+    private void executePostTest(String endpoint, String testName, JSONObject requestBody) {
+        Allure.step("Start test: " + testName);
+        Allure.addAttachment("Request Payload", "application/json", requestBody.toString());
+
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .body(requestBody.toString())
+                .when()
+                .post(endpoint)
+                .then()
+                .extract().response();
+
+        Allure.addAttachment("API Request", "text/plain", "POST " + endpoint);
+        attachResponseDetails(response);
+
+        Assertions.assertEquals(201, response.statusCode(), "Expected status code: 201");
+
+        if (requestBody.has("title") && requestBody.has("body") && requestBody.has("userId")) {
+            validatePostResponse(response, requestBody);
+        } else {
+            Assertions.assertNotNull(response.jsonPath().get("id"), "Response should contain an ID");
+        }
+
+        Allure.step("Finish test: " + testName);
+    }
+
+    private void validatePostResponse(Response response, JSONObject requestBody) {
+        response.then()
+                .body("title", equalTo(requestBody.getString("title")))
+                .body("body", equalTo(requestBody.getString("body")))
+                .body("userId", equalTo(requestBody.getInt("userId")))
+                .body("id", not(emptyOrNullString()));
+    }
+
+    private void attachResponseDetails(Response response) {
+        String responseDetails = "Status Code: " + response.statusCode() + "\n" +
+                "Headers: " + response.headers() + "\n" +
+                "Response Body: " + response.getBody().asPrettyString();
+
+        Allure.addAttachment("API Response Details", "text/plain", responseDetails);
+    }
+
+    private JSONObject createPostRequestBody(String title, String body, int userId) {
+        return new JSONObject().put("title", title).put("body", body).put("userId", userId);
+    }
+}

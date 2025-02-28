@@ -79,7 +79,7 @@
                 <version>2.12.0</version>
                 <configuration>
                     <reportVersion>2.24.0</reportVersion>
-                    <allureResultsDirectory>${project.build.directory}/allure-results</allureResultsDirectory>
+
                 </configuration>
             </plugin>
         </plugins>
